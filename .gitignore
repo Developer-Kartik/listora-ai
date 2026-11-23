@@ -1,0 +1,30 @@
+# Python virtual environments
+venv/
+.venv/
+backend/venv/
+
+# Python cache
+__pycache__/
+*.py[cod]
+.pytest_cache/
+
+# Environment variables
+.env
+.env.*
+
+# Node.js
+node_modules/
+.next/
+
+# IDE
+.vscode/
+.idea/
+
+# Generated images
+storage/uploads/*
+storage/processed/*
+storage/generated/*
+
+!storage/uploads/.gitkeep
+!storage/processed/.gitkeep
+!storage/generated/.gitkeep
