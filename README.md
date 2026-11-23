@@ -1,11 +1,10 @@
-# Listora AI
+# Listora AI 🚀
 
-AI-Powered E-commerce Listing Automation Platform.
+**AI-Powered E-commerce Listing Automation Platform**
 
-## Objective
+## Overview
 
-Transform a single product photograph into multiple
-professional e-commerce listing images.
+Listora AI aims to help e-commerce sellers transform a single product photograph into multiple professional marketplace listing images.
 
 ## Planned Features
 
@@ -13,8 +12,9 @@ professional e-commerce listing images.
 - AI product analysis
 - Background removal
 - Product-preserving image processing
-- AI image generation
+- AI-generated product scenes
 - Meesho listing image presets
+- SEO listing generation
 
 ## Technology Stack
 
@@ -28,16 +28,18 @@ professional e-commerce listing images.
 
 ## DevOps Roadmap
 
-- Docker
-- GitHub Actions
+- Docker containerization
+- GitHub Actions CI/CD
 - Terraform
 - Ansible
 - Kubernetes
 - Prometheus
 - Grafana
 
-## Status
+## Development Status
 
-Under active development.
+Currently under active development.
 
-Developer: Kartik Verma
+## Developer
+
+Kartik Verma
