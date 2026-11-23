@@ -2,6 +2,7 @@ from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 from app.services.image_analysis import analyze_image
+from app.services.background_removal import remove_background
 import re
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -12,6 +13,7 @@ router = APIRouter()
 
 PROJECT_ROOT = Path(__file__).resolve().parents[3]
 UPLOAD_DIR = PROJECT_ROOT / "storage" / "uploads"
+PROCESSED_DIR = PROJECT_ROOT / "storage" / "processed"
 
 MAX_FILE_SIZE = 10 * 1024 * 1024  # 10 MB
 
@@ -146,3 +148,66 @@ async def get_product_image_analysis(upload_id: str):
         "upload_id": upload_id,
         "analysis": analysis
     }
+
+@router.post("/uploads/{upload_id}/remove-background")
+async def remove_product_background(upload_id: str):
+
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid upload ID."
+        )
+
+    matching_files = list(UPLOAD_DIR.glob(f"{upload_id}.*"))
+
+    if not matching_files:
+        raise HTTPException(
+            status_code=404,
+            detail="Uploaded image not found."
+        )
+
+    input_path = matching_files[0]
+
+    PROCESSED_DIR.mkdir(parents=True, exist_ok=True)
+
+    output_path = PROCESSED_DIR / f"{upload_id}_no_bg.png"
+
+    try:
+        result = remove_background(input_path, output_path)
+
+    except (ValueError, OSError) as error:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Background removal failed: {error}"
+        )
+
+    return {
+        "message": "Background removed successfully",
+        "upload_id": upload_id,
+        "processed_image": result,
+        "preview_url": f"/api/v1/processed/{upload_id}"
+    }
+
+
+@router.get("/processed/{upload_id}")
+async def preview_processed_image(upload_id: str):
+
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid upload ID."
+        )
+
+    output_path = PROCESSED_DIR / f"{upload_id}_no_bg.png"
+
+    if not output_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Processed image not found."
+        )
+
+    return FileResponse(
+        path=output_path,
+        media_type="image/png",
+        content_disposition_type="inline"
+    )

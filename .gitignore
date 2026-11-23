@@ -28,3 +28,4 @@ storage/generated/*
 !storage/uploads/.gitkeep
 !storage/processed/.gitkeep
 !storage/generated/.gitkeep
+backend/venv311/
