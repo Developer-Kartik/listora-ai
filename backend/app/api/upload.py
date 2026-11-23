@@ -1,7 +1,7 @@
 from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
-
+from app.services.image_analysis import analyze_image
 import re
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -113,3 +113,36 @@ async def preview_product_image(upload_id: str):
         content_disposition_type="inline"
     )
 
+
+@router.get("/uploads/{upload_id}/analysis")
+async def get_product_image_analysis(upload_id: str):
+
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid upload ID."
+        )
+
+    matching_files = list(UPLOAD_DIR.glob(f"{upload_id}.*"))
+
+    if not matching_files:
+        raise HTTPException(
+            status_code=404,
+            detail="Uploaded image not found."
+        )
+
+    file_path = matching_files[0]
+
+    try:
+        analysis = analyze_image(file_path)
+    except (ValueError, OSError):
+        raise HTTPException(
+            status_code=400,
+            detail="Unable to analyze this image."
+        )
+
+    return {
+        "message": "Image analysis completed successfully",
+        "upload_id": upload_id,
+        "analysis": analysis
+    }
