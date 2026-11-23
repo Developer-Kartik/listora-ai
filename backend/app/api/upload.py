@@ -1,9 +1,11 @@
-
 from io import BytesIO
 from pathlib import Path
 from uuid import uuid4
 
+import re
+
 from fastapi import APIRouter, File, HTTPException, UploadFile
+from fastapi.responses import FileResponse
 from PIL import Image, UnidentifiedImageError
 
 router = APIRouter()
@@ -85,3 +87,29 @@ async def upload_product_image(file: UploadFile = File(...)):
         "height": height,
         "status": "uploaded"
     }
+
+@router.get("/uploads/{upload_id}")
+async def preview_product_image(upload_id: str):
+
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid upload ID."
+        )
+
+    matching_files = list(UPLOAD_DIR.glob(f"{upload_id}.*"))
+
+    if not matching_files:
+        raise HTTPException(
+            status_code=404,
+            detail="Uploaded image not found."
+        )
+
+    file_path = matching_files[0]
+
+    return FileResponse(
+        path=file_path,
+        filename=file_path.name,
+        content_disposition_type="inline"
+    )
+
