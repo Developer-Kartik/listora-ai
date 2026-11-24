@@ -3,6 +3,7 @@ from pathlib import Path
 from uuid import uuid4
 from app.services.image_analysis import analyze_image
 from app.services.background_removal import remove_background
+from app.services.hero_image import create_hero_image
 import re
 
 from fastapi import APIRouter, File, HTTPException, UploadFile
@@ -209,5 +210,65 @@ async def preview_processed_image(upload_id: str):
     return FileResponse(
         path=output_path,
         media_type="image/png",
+        content_disposition_type="inline"
+    )
+
+
+@router.post("/uploads/{upload_id}/hero-image")
+async def generate_hero_image(upload_id: str):
+
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid upload ID."
+        )
+
+    input_path = PROCESSED_DIR / f"{upload_id}_no_bg.png"
+
+    if not input_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Transparent product image not found. Remove background first."
+        )
+
+    output_path = PROCESSED_DIR / f"{upload_id}_hero.jpg"
+
+    try:
+        result = create_hero_image(input_path, output_path)
+
+    except (ValueError, OSError) as error:
+        raise HTTPException(
+            status_code=400,
+            detail=f"Hero image generation failed: {error}"
+        )
+
+    return {
+        "message": "White background hero image generated successfully",
+        "upload_id": upload_id,
+        "hero_image": result,
+        "preview_url": f"/api/v1/hero/{upload_id}"
+    }
+
+
+@router.get("/hero/{upload_id}")
+async def preview_hero_image(upload_id: str):
+
+    if not re.fullmatch(r"[0-9a-f]{32}", upload_id):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid upload ID."
+        )
+
+    output_path = PROCESSED_DIR / f"{upload_id}_hero.jpg"
+
+    if not output_path.is_file():
+        raise HTTPException(
+            status_code=404,
+            detail="Hero image not found."
+        )
+
+    return FileResponse(
+        path=output_path,
+        media_type="image/jpeg",
         content_disposition_type="inline"
     )
